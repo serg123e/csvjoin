@@ -2,10 +2,29 @@
 
 require 'csv'
 module Tabalmer
+  class DataRow < CSV::Row
+    #
+    # Returns +true+ if this row contains the same headers and fields in the
+    # same order as +other+.
+    #
+    def ==(other)
+      return @row == other.row if other.is_a? CSV::Row
+
+      @row == other
+    end
+  end
+
   class DataParser
     def self.parse(t)
-      CSV.parse(t, headers: true)
-      # if (t.instance_of?String)
+      csv = CSV.parse(t, headers: true)
+      # return csv.rows
+
+      list = []
+      csv.each do |row|
+        row = DataRow.new(row.headers, row.fields)
+        # list << row
+      end
+      csv
     end
   end
 end
