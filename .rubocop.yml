@@ -38,6 +38,7 @@ Style/HashTransformValues:
 
 Style/Documentation:
   Enabled: true
-Style/FrozenStringLiteralComment:
-  EnforcedStyle: never
+
+#Style/FrozenStringLiteralComment:
+#  EnforcedStyle: never
 
