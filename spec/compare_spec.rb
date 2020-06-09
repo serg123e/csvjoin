@@ -26,8 +26,8 @@ describe 'tabalmer' do
   end
   it 'can parse column param' do
     c = Comparator.new
-    c.set_columns_to_compare("client:name,amount:price")
-    expect( c.columns ).to eq( [['client','name'], ['amount','price']] )
+    c.set_columns_to_compare('client:name,amount:price')
+    expect( c.columns ).to eq( [%w(client name), %w(amount price)] )
   end
 
   it 'works with tsv and csv' do

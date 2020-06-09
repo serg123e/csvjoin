@@ -1,6 +1,7 @@
 require_relative 'data_parser'
 module Tabalmer
   class Comparator
+    attr_accessor :columns
     def initialize
     end
     def self.compare(t1,t2)
@@ -15,6 +16,13 @@ module Tabalmer
 
       end
 
+    end
+
+    def set_columns_to_compare(cols)
+      @columns ||= []
+      cols.scan(/([^\,\:]+):([^\,\:]+)/).each do |from,to|
+        @columns << [from,to]
+      end
     end
   end
 end
