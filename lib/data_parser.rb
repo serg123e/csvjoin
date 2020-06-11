@@ -2,7 +2,7 @@
 
 require 'csv'
 
-module Talimer
+module CSVJoin
   class DataRow < CSV::Row
     attr_accessor :comparator
     def side
@@ -52,7 +52,9 @@ module Talimer
     def ==(other)
       if (@comparator.columns)
         @comparator.weights.each_with_index do |weight, index|
-          from, to = @comparator.columns[index]
+          col_left, col_right = @comparator.columns[index]
+          from = (self.side.eql?'left') ? col_left : col_right
+          to = (other.side.eql?'left') ? col_left : col_right
           # warn "#{from},#{to},#{self.inspect},#{other.inspect}"
           if (self[from].nil? or other[to].nil?)
             warn "something wrong"

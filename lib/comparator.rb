@@ -4,7 +4,7 @@ require_relative 'data_parser'
 require 'diff/lcs'
 # require 'debug'
 
-class Diff::LCS::TalimerDiffCallbacks
+class Diff::LCS::NoReplaceDiffCallbacks
   # Returns the difference set collected during the diff process.
   attr_reader :diffs
 
@@ -32,7 +32,7 @@ class Diff::LCS::TalimerDiffCallbacks
   end
 end
 
-module Talimer
+module CSVJoin
   class Comparator
     attr_accessor :columns, :weights
     attr_accessor :headers, :left_size, :right_size, :data_left, :data_right
@@ -74,10 +74,14 @@ module Talimer
       @data_left = parse(source1)
       @data_right = parse(source2)
       @headers = [ *data_left.headers, "diff", *data_right.headers ]
-      @left_size = data_left.headers.size
-      @right_size = data_right.headers.size
-
+      @left_size = @data_left.headers.size
+      @right_size = @data_right.headers.size
+      if (@columns.nil?)
+        @columns ||= (@data_left.headers & @data_right.headers).map {|a| [a,a] }
+        @weights ||= [1, *[0] * (@columns.size - 1)]
+      end
     end
+
     def lcs(source1,source2)
       prepare(source1,source2)
       lcs = Diff::LCS.lcs(csv_to_talimer_rows( @data_left, side:'left' ), csv_to_talimer_rows( @data_right, side:'right' )) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
@@ -89,7 +93,7 @@ module Talimer
     def compare(source1, source2)
       prepare(source1,source2)
 
-      sdiff = Diff::LCS.sdiff(csv_to_talimer_rows( @data_left, side:'left' ), csv_to_talimer_rows( @data_right, side:'right'  ), Diff::LCS::TalimerDiffCallbacks) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
+      sdiff = Diff::LCS.sdiff(csv_to_talimer_rows( @data_left, side:'left' ), csv_to_talimer_rows( @data_right, side:'right'  ), Diff::LCS::NoReplaceDiffCallbacks) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
 
       # p sdiff.join(";\n")
       col_sep = ","
@@ -128,8 +132,6 @@ module Talimer
       end
 
       @weights = [1, *[0] * (@columns.size - 1)]
-      p @columns
-      p @weights
     end
 
     def compare_field(r1, r2, from, to)
