@@ -23,7 +23,7 @@ It's a typical task when the critical data have been entered manually by operato
     id,name,price,diff,table2.name,payment_date,amount
     11,Test,100.0,<=>,Test,2020-04-15,97.0
     12,Fest,150.0,==>,,,
-    13,Best,200.0,   ,Best,2020-05-01,200.0
+    13,Best,200.0,===,Best,2020-05-01,200.0
     ,,,<==,Gest,2020-05-06,100.0
 
 now we can see that

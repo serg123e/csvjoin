@@ -35,16 +35,12 @@ end
 module CSVJoin
   class Comparator
     attr_accessor :columns, :weights
-    attr_accessor :headers, :left_size, :right_size, :data_left, :data_right
+    attr_accessor :headers, :data, :rows
 
-    @instance = new
-
-    private_class_method :new
-
-    def self.instance
-      @instance
+    def initialize
+      @data = {}
+      @rows = {}
     end
-    # def initialize; end
 
     def parse(t)
       if (File.exist? t)
@@ -70,21 +66,32 @@ module CSVJoin
       list
     end
 
+    def parse_side(source, side:'undef')
+      @data[side] = parse(source)
+      @rows[side] = csv_to_talimer_rows( @data[side], side:side )
+    end
+
     def prepare(source1, source2)
-      @data_left = parse(source1)
-      @data_right = parse(source2)
-      @headers = [ *data_left.headers, "diff", *data_right.headers ]
-      @left_size = @data_left.headers.size
-      @right_size = @data_right.headers.size
+      parse_side( source1, side:'left')
+      parse_side( source2, side:'right')
+
+      #@left_size = @data_left.headers.size
+      #@right_size = @data_right.headers.size
+      
+      # same col names by default
       if (@columns.nil?)
-        @columns ||= (@data_left.headers & @data_right.headers).map {|a| [a,a] }
-        @weights ||= [1, *[0] * (@columns.size - 1)]
+        @columns = (@data['left'].headers & @data['right'].headers).map {|a| [a,a] }
+        @weights = [ *[1] * (@columns.size) ]
       end
+      
+      @headers = [ *@data['left'].headers, "diff", *@data['right'].headers ]
+      # @headers.flatten!
     end
 
     def lcs(source1,source2)
       prepare(source1,source2)
-      lcs = Diff::LCS.lcs(csv_to_talimer_rows( @data_left, side:'left' ), csv_to_talimer_rows( @data_right, side:'right' )) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
+      lcs = Diff::LCS.lcs(@rows['left'],
+                          @rows['right']) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
       puts "===lcs==="
       puts lcs.join("\n")
       puts "========="
@@ -93,14 +100,17 @@ module CSVJoin
     def compare(source1, source2)
       prepare(source1,source2)
 
-      sdiff = Diff::LCS.sdiff(csv_to_talimer_rows( @data_left, side:'left' ), csv_to_talimer_rows( @data_right, side:'right'  ), Diff::LCS::NoReplaceDiffCallbacks) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
+      sdiff = Diff::LCS.sdiff(@rows['left'],
+                              @rows['right'],
+                              Diff::LCS::NoReplaceDiffCallbacks
+      )
 
       # p sdiff.join(";\n")
       col_sep = ","
       row_sep = "\n"
       res = [@headers].join(col_sep) + row_sep
-      left_empty_row =  [*[''] * @left_size]
-      right_empty_row = [*[''] * @right_size]
+      left_empty_row =  [*[''] * @data['left'].headers.size]
+      right_empty_row = [*[''] * @data['right'].headers.size]
 
       sdiff.each do |cc|
         action = cc.action
@@ -115,11 +125,11 @@ module CSVJoin
         when '+'
           row = [*left_empty_row, "<==", right_row.fields]
         when '='
-          row = [left_row.fields, "   ", right_row.fields]
+          row = [left_row.fields, "===", right_row.fields]
         else
           warn "unknown action #{action}"
         end
-        res += row.join(col_sep) + row_sep
+        res += row.flatten.join(col_sep) + row_sep
       end
       res
     end
