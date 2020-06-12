@@ -32,9 +32,6 @@ module CSVJoin
            "13,Best,200.0\n" \
            "15,Zest,500.0\n"
 
-
-
-
       t2 = "name,payment_date,amount\n" \
            "Test,2020-04-15,100.0\n" \
            "ZesZ,2020-05-06,500.0\n" \
@@ -42,13 +39,12 @@ module CSVJoin
            "Gest,2020-05-06,100.0\n" \
            "Zest,2020-05-06,500.0\n"
 
-
       c = Comparator.new
-      c.set_columns_to_compare('client=name,price=amount')
+      c.columns_to_compare('client=name,price=amount')
       # c.lcs(t1, t2)
       res = c.compare(t1, t2)
-      warn "res====\n"+res
-      expect(res ).to eq(
+      warn "res====\n" + res
+      expect(res).to eq(
         "id,client,price,diff,name,payment_date,amount\n" \
         "11,Test,100.0,===,Test,2020-04-15,100.0\n" \
         "12,Fest,150.0,==>,,,\n" \
@@ -56,37 +52,13 @@ module CSVJoin
         "13,Best,200.0,===,Best,2020-05-01,200.0\n" \
                    ",,,<==,Gest,2020-05-06,100.0\n" \
         "15,Zest,500.0,===,Zest,2020-05-06,500.0\n"
-
-
       )
     end
     it 'can parse column param' do
       c = Comparator.new
-      c.set_columns_to_compare('client=name,amount~price')
+      c.columns_to_compare('client=name,amount~price')
       expect(c.columns).to eq([%w[client name], %w[amount price]])
       expect(c.weights).to eq([1, 0])
-    end
-
-    describe '#compare_rows' do
-      before :all do
-        @c = Comparator.new
-        @c.set_columns_to_compare('client=name,amount~price')
-        @r1 = { 'client' => 'Test', 'amount' => '123', 'dif' => 'not important' }
-      end
-      it 'works for ===' do
-        r2 = { 'name' => 'Test', 'price' => '123', 'dif' => 'asdasdasd' }
-        expect(@c.compare_rows(@r1, r2)).to eq "==="
-      end
-
-      it 'works for <=>' do
-        r3 = { 'name' => 'Test', 'price' => '124', 'dif' => 'asdasdasd' }
-        expect(@c.compare_rows(@r1, r3)).to eq "<=>"
-      end
-      it 'works for !==' do
-        r4 = @r1.clone
-        r4['name'] = "QWEQ"
-        expect(@c.compare_rows(@r1, r4)).to eq "!=="
-      end
     end
 
     it 'works with tsv and csv' do

@@ -1,14 +1,16 @@
 # frozen_string_literal: true
 
-require_relative 'data_parser'
+require_relative 'data_row'
 require 'diff/lcs'
 # require 'debug'
 
+# Callbacks for Diff::LCS with insert in left "<" + insert in right ">" instead of replace (!)
 class Diff::LCS::NoReplaceDiffCallbacks
   # Returns the difference set collected during the diff process.
   attr_reader :diffs
 
-  def initialize #:yields self:
+  #:yields self:
+  def initialize
     @diffs = []
     yield self if block_given?
   end
@@ -26,13 +28,14 @@ class Diff::LCS::NoReplaceDiffCallbacks
   end
 
   def change(event)
-    discard_a(Diff::LCS::ContextChange.new("<", event.old_position, event.old_element, event.new_position, event.new_element))
-    discard_b(Diff::LCS::ContextChange.new(">", event.old_position, event.old_element, event.new_position, event.new_element))
+    discard_a(Diff::LCS::ContextChange.new("<", event.old_position, event.old_element, nil, nil))
+    discard_b(Diff::LCS::ContextChange.new(">", nil, nil, event.new_position, event.new_element))
     # @diffs << Diff::LCS::ContextChange.simplify(event)
   end
 end
 
 module CSVJoin
+  # Compare and join two tables
   class Comparator
     attr_accessor :columns, :weights
     attr_accessor :headers, :data, :rows
@@ -42,75 +45,77 @@ module CSVJoin
       @rows = {}
     end
 
-    def parse(t)
-      if (File.exist? t)
-        csv = CSV.read(t,headers: true)
-      else
-        csv = CSV.parse(t, headers: true)
-      end
-
-      #return csv
-
+    def parse(data)
+      csv = if File.exist? data
+              CSV.read(data, headers: true)
+            else
+              CSV.parse(data, headers: true)
+            end
       csv
     end
 
-    def csv_to_talimer_rows(csv, side:'undef')
+    def csv_to_talimer_rows(csv, side: 'undef')
       list = []
+      row_columns = columns.map { |c| (side.eql? LEFT) ? c.first : c.last }
+      # row_weights = weights # .map {|c| (side.eql?LEFT) ? c.first : c.last }
+
       csv.each do |row|
         row2 = DataRow.new(row.headers, row.fields)
-        row2.comparator = self
+        row2.columns = row_columns
+        row2.weights = weights
         row2.side = side
+
         list << row2
       end
 
       list
     end
 
-    def parse_side(source, side:'undef')
+    def parse_side(source, side: nil)
       @data[side] = parse(source)
-      @rows[side] = csv_to_talimer_rows( @data[side], side:side )
     end
 
-    def prepare(source1, source2)
-      parse_side( source1, side:'left')
-      parse_side( source2, side:'right')
+    def prepare_rows(side: nil)
+      @rows[side] = csv_to_talimer_rows(@data[side], side: side)
+    end
 
-      #@left_size = @data_left.headers.size
-      #@right_size = @data_right.headers.size
-      
-      # same col names by default
-      if (@columns.nil?)
-        @columns = (@data['left'].headers & @data['right'].headers).map {|a| [a,a] }
-        @weights = [ *[1] * (@columns.size) ]
-      end
-      
-      @headers = [ *@data['left'].headers, "diff", *@data['right'].headers ]
+    LEFT = 'left'
+
+    RIGHT = 'right'
+
+    def prepare(source1, source2)
+      parse_side(source1, side: LEFT)
+      parse_side(source2, side: RIGHT)
+
+      set_default_column_names
+
+      prepare_rows(side: LEFT)
+      prepare_rows(side: RIGHT)
+
+      @headers = [*@data[LEFT].headers, "diff", *@data[RIGHT].headers]
       # @headers.flatten!
     end
 
-    def lcs(source1,source2)
-      prepare(source1,source2)
-      lcs = Diff::LCS.lcs(@rows['left'],
-                          @rows['right']) # , Diff::LCS::ContextDiffCallbacks).flatten(1)
-      puts "===lcs==="
-      puts lcs.join("\n")
-      puts "========="
+    # by default use columns with same names in both tables
+    def set_default_column_names
+      return unless @columns.nil?
+
+      @columns = (@data[LEFT].headers & @data[RIGHT].headers).map { |a| [a, a] }
+      @weights = [*[1] * @columns.size]
     end
 
     def compare(source1, source2)
-      prepare(source1,source2)
+      prepare(source1, source2)
 
-      sdiff = Diff::LCS.sdiff(@rows['left'],
-                              @rows['right'],
-                              Diff::LCS::NoReplaceDiffCallbacks
-      )
+      sdiff = Diff::LCS.sdiff(@rows[LEFT],
+                              @rows[RIGHT],
+                              Diff::LCS::NoReplaceDiffCallbacks)
 
-      # p sdiff.join(";\n")
       col_sep = ","
       row_sep = "\n"
       res = [@headers].join(col_sep) + row_sep
-      left_empty_row =  [*[''] * @data['left'].headers.size]
-      right_empty_row = [*[''] * @data['right'].headers.size]
+      left_empty_row =  [*[''] * @data[LEFT].headers.size]
+      right_empty_row = [*[''] * @data[RIGHT].headers.size]
 
       sdiff.each do |cc|
         action = cc.action
@@ -134,7 +139,7 @@ module CSVJoin
       res
     end
 
-    def set_columns_to_compare(cols)
+    def columns_to_compare(cols)
       @columns = []
 
       cols.scan(/([^,:=~]+)(?:[=\~])([^,:=~]+)/).each do |from, to|
@@ -142,29 +147,6 @@ module CSVJoin
       end
 
       @weights = [1, *[0] * (@columns.size - 1)]
-    end
-
-    def compare_field(r1, r2, from, to)
-      if r1[from].eql? r2[to]
-        return "==="
-      else
-        return "!=="
-      end
-    end
-
-    def compare_rows(r1, r2)
-      # warn("#{r1} #{r2}")
-      @weights.each_with_index do |weight, index|
-        from, to = @columns[index]
-        if weight >= 1
-          return "!==" unless r1[from].eql? r2[to]
-        else
-          return "<=>" unless r1[from].eql? r2[to]
-        end
-      end
-      return "==="
-
-      return '<=>'
     end
   end
 end
