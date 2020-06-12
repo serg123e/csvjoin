@@ -3,7 +3,7 @@
 require_relative 'spec_helper'
 require File.join(File.dirname(__FILE__), '..', 'lib', 'comparator.rb')
 
-module Talimer
+module CSVJoin
   describe 'tabalmer' do
     it 'finds the difference in slightly modified tables from one source' do
       t1 = "id,client,price\n" \
