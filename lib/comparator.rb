@@ -93,7 +93,6 @@ module CSVJoin
       prepare_rows(side: RIGHT)
 
       @headers = [*@data[LEFT].headers, "diff", *@data[RIGHT].headers]
-      # @headers.flatten!
     end
 
     # by default use columns with same names in both tables
@@ -111,32 +110,34 @@ module CSVJoin
                               @rows[RIGHT],
                               Diff::LCS::NoReplaceDiffCallbacks)
 
-      col_sep = ","
-      row_sep = "\n"
-      res = [@headers].join(col_sep) + row_sep
+      #col_sep = ","
+      #row_sep = "\n"
       left_empty_row =  [*[''] * @data[LEFT].headers.size]
       right_empty_row = [*[''] * @data[RIGHT].headers.size]
 
-      sdiff.each do |cc|
-        action = cc.action
-        left_row = cc.old_element
-        right_row = cc.new_element
+      CSV.generate(row_sep: "\n", col_sep: ",") do |csv|
+        csv << @headers
 
-        case action
-        when '!'
-          row = [left_row.fields, "!==", right_row.fields]
-        when '-'
-          row = [left_row.fields, "==>", *right_empty_row]
-        when '+'
-          row = [*left_empty_row, "<==", right_row.fields]
-        when '='
-          row = [left_row.fields, "===", right_row.fields]
-        else
-          warn "unknown action #{action}"
+        sdiff.each do |cc|
+          action = cc.action
+          left_row = cc.old_element
+          right_row = cc.new_element
+
+          case action
+            when '!'
+              row = [*left_row.fields, "!==", *right_row.fields]
+            when '-'
+              row = [*left_row.fields, "==>", *right_empty_row]
+            when '+'
+              row = [*left_empty_row, "<==", *right_row.fields]
+            when '='
+              row = [*left_row.fields, "===", *right_row.fields]
+            else
+              warn "unknown action #{action}"
+          end
+          csv << row
         end
-        res += row.flatten.join(col_sep) + row_sep
       end
-      res
     end
 
     def columns_to_compare(cols)
