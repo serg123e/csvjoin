@@ -48,12 +48,27 @@ module CSVJoin
       @input_col_sep = ","
     end
 
+    def intuit_col_sep(line)
+      return "," if line.nil?
+      [",",";","\t"].sort_by { |char| line.count(char) }.last
+    end
+
+    def intuit_separator(file)
+      File.open(file, encoding: 'bom|utf-8').each do |line|
+        @input_col_sep = intuit_col_sep(line)
+        break
+      end
+      file
+    end
+
     def parse(data)
-      csv = if File.exist? data
-              CSV.read(data, headers: true, col_sep: @input_col_sep, liberal_parsing: true)
-            else
-              CSV.parse(data, headers: true, col_sep: @input_col_sep)
-            end
+      if File.exist? data
+        intuit_separator(data)
+        csv = CSV.read(data, headers: true, col_sep: @input_col_sep)
+        raise "Wrong CSV" if csv == []
+      else
+        csv = CSV.parse(data, headers: true, col_sep: @input_col_sep)
+      end
       csv
     end
 
