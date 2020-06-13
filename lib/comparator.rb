@@ -45,15 +45,15 @@ module CSVJoin
       @data = []
       @rows = []
       @empty = []
+      @input_col_sep = ","
     end
 
     def parse(data)
       csv = if File.exist? data
-              CSV.read(data, headers: true)
+              CSV.read(data, headers: true, col_sep: @input_col_sep, liberal_parsing: true)
             else
-              CSV.parse(data, headers: true)
+              CSV.parse(data, headers: true, col_sep: @input_col_sep)
             end
-      @input_col_sep = ","
       csv
     end
 

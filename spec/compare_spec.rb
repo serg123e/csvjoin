@@ -61,11 +61,9 @@ module CSVJoin
       expect(c.weights).to eq([1, 0])
     end
 
-    it 'works with tsv and csv' do
+    xit 'works with tsv and csv' do
     end
 
-    it 'works with multiline csv' do
-    end
     it 'works with multiline csv' do
     end
   end
