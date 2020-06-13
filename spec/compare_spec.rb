@@ -19,9 +19,9 @@ module CSVJoin
       c = Comparator.new
       expect(c.compare(t1, t2)).to eq("id,client,price,diff,id,client,price\n" \
                                                "11,Test,100.0,===,11,Test,100.0\n" \
-                                               '02,Fest,150.0,==>,"","",""'+"\n" \
-                                                    '"","","",<==,01,Test,100.0'+"\n" \
-                                                    '"","","",<==,12,Fest,100.0'+"\n" \
+                                               '02,Fest,150.0,==>,"","",""' + "\n" \
+                                                    '"","","",<==,01,Test,100.0' + "\n" \
+                                                    '"","","",<==,12,Fest,100.0' + "\n" \
                                                "13,Best,200.0,===,13,Best,200.0\n")
     end
     it 'finds the difference in different tables' do
@@ -47,10 +47,10 @@ module CSVJoin
       expect(res).to eq(
         "id,client,price,diff,name,payment_date,amount\n" \
         "11,Test,100.0,===,Test,2020-04-15,100.0\n" \
-        '12,Fest,150.0,==>,"","",""'+"\n" \
+        '12,Fest,150.0,==>,"","",""' + "\n" \
         "16,ZesZ,500.0,===,ZesZ,2020-05-06,500.0\n" \
         "13,Best,200.0,===,Best,2020-05-01,200.0\n" \
-             '"","","",<==,Gest,2020-05-06,100.0'+"\n" \
+             '"","","",<==,Gest,2020-05-06,100.0' + "\n" \
         "15,Zest,500.0,===,Zest,2020-05-06,500.0\n"
       )
     end

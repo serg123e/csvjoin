@@ -3,6 +3,7 @@
 require 'csv'
 
 module CSVJoin
+  # CSV::Row with specified important columns to compare
   class DataRow < CSV::Row
     attr_accessor :columns, :weights
     attr_reader :side
@@ -20,15 +21,10 @@ module CSVJoin
     def hash
       if @columns
         res = []
-        @weights.each_with_index do |weight, index|
+        @weights.each_with_index do |_weight, index|
           field = @columns[index]
-
           warn("something wrong, #{inspect}, side #{side.inspect}, f'#{field}'==nil") if self[field].nil?
-          res << if weight >= 1
-                   self[field]
-                 else
-                   self[field]
-                 end
+          res << self[field]
         end
         return res.hash
       else
@@ -42,18 +38,10 @@ module CSVJoin
     #
     def ==(other)
       if @columns
-        @weights.each_with_index do |weight, index|
-          from = @columns[index]
+        @columns.each_with_index do |from, index|
           to = other.columns[index]
-          # warn "#{from},#{to},#{self.inspect},#{other.inspect}"
-          warn "something wrong" if self[from].nil? || other[to].nil?
-          if weight >= 1
-            # warn("#{self[from]} <1> #{other[to]}")
-            return false unless self[from].eql? other[to]
-          else
-            # warn("#{self[from]} <0> #{other[to]}")
-            return false unless self[from].eql? other[to] # "<=>"
-          end
+          # warn "something wrong" if self[from].nil? || other[to].nil?
+          return false unless self[from].eql? other[to]
         end
         return true
       else

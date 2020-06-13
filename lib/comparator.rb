@@ -39,10 +39,12 @@ module CSVJoin
   class Comparator
     attr_accessor :columns, :weights
     attr_accessor :headers, :data, :rows
+    attr_accessor :input_col_sep
 
     def initialize
-      @data = {}
-      @rows = {}
+      @data = []
+      @rows = []
+      @empty = []
     end
 
     def parse(data)
@@ -51,13 +53,13 @@ module CSVJoin
             else
               CSV.parse(data, headers: true)
             end
+      @input_col_sep = ","
       csv
     end
 
     def csv_to_talimer_rows(csv, side: 'undef')
       list = []
-      row_columns = columns.map { |c| (side.eql? LEFT) ? c.first : c.last }
-      # row_weights = weights # .map {|c| (side.eql?LEFT) ? c.first : c.last }
+      row_columns = columns.map { |c| side.eql?(LEFT) ? c.first : c.last }
 
       csv.each do |row|
         row2 = DataRow.new(row.headers, row.fields)
@@ -73,15 +75,16 @@ module CSVJoin
 
     def parse_side(source, side: nil)
       @data[side] = parse(source)
+      @empty[side] = [*[''] * @data[side].headers.size]
     end
 
     def prepare_rows(side: nil)
       @rows[side] = csv_to_talimer_rows(@data[side], side: side)
     end
 
-    LEFT = 'left'
+    LEFT = 1 # 'left'
 
-    RIGHT = 'right'
+    RIGHT = 2 # 'right'
 
     def prepare(source1, source2)
       parse_side(source1, side: LEFT)
@@ -103,6 +106,13 @@ module CSVJoin
       @weights = [*[1] * @columns.size]
     end
 
+    def action_verbose(action)
+      repl = { "!": "!==", "-": "==>", "+": "<==", "=": "===" }
+      raise "wrong action #{action}" unless repl.has_key? action.to_sym
+
+      return repl[action.to_sym]
+    end
+
     def compare(source1, source2)
       prepare(source1, source2)
 
@@ -110,40 +120,25 @@ module CSVJoin
                               @rows[RIGHT],
                               Diff::LCS::NoReplaceDiffCallbacks)
 
-      #col_sep = ","
-      #row_sep = "\n"
-      left_empty_row =  [*[''] * @data[LEFT].headers.size]
-      right_empty_row = [*[''] * @data[RIGHT].headers.size]
-
-      CSV.generate(row_sep: "\n", col_sep: ",") do |csv|
+      CSV.generate(row_sep: "\n", col_sep: @input_col_sep) do |csv|
         csv << @headers
-
-        sdiff.each do |cc|
-          action = cc.action
-          left_row = cc.old_element
-          right_row = cc.new_element
-
-          case action
-            when '!'
-              row = [*left_row.fields, "!==", *right_row.fields]
-            when '-'
-              row = [*left_row.fields, "==>", *right_empty_row]
-            when '+'
-              row = [*left_empty_row, "<==", *right_row.fields]
-            when '='
-              row = [*left_row.fields, "===", *right_row.fields]
-            else
-              warn "unknown action #{action}"
-          end
+        sdiff.each do |change|
+          row = joined_row(change)
           csv << row
         end
       end
     end
 
+    def joined_row(change)
+      left_row = change.old_element.nil? ? @empty[LEFT] : change.old_element.fields
+      right_row = change.new_element.nil? ? @empty[RIGHT] : change.new_element.fields
+      [*left_row, action_verbose(change.action), *right_row]
+    end
+
     def columns_to_compare(cols)
       @columns = []
 
-      cols.scan(/([^,:=~]+)(?:[=\~])([^,:=~]+)/).each do |from, to|
+      cols.scan(/([^,:=~]+)(?:[=~])([^,:=~]+)/).each do |from, to|
         @columns << [from, to]
       end
 
