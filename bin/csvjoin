@@ -1,0 +1,19 @@
+#!/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/comparator.rb'
+
+if (ARGV.length < 2 || (ARGV.include?"-h") || (ARGV.include?"--help"))
+  puts "Usage: csvjoin FILE1 FILE2 [ColumnA1=ColumnA2,ColumnB1=ColumnB2]"
+  puts "Joins two CSV files looking for same values in specified columns. "
+  puts "If no columns specified by default it will use columns with the same name in both files"
+else
+  c = CSVJoin::Comparator.new
+  t1 = ARGV.shift
+  t2 = ARGV.shift
+  params = ARGV.shift
+  c.columns_to_compare(params) if params
+  c.input_col_sep = ";"
+  res = c.compare(t1, t2)
+  puts res
+end
