@@ -1,7 +1,7 @@
 ﻿# CSVJoin: Table Align & Merge tool
 tool to align and merge two tables containing different parts of the same data. 
 
-![Table join](https://www.github.com/serg123e/csvjoin/join.png)
+![Table join](join.png?raw=true)
 
 ## Installation
 `$ gem install csvjoin`
