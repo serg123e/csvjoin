@@ -19,17 +19,13 @@ module CSVJoin
     end
 
     def hash
-      if @columns
-        res = []
-        @weights.each_with_index do |_weight, index|
-          field = @columns[index]
-          warn("something wrong, #{inspect}, side #{side.inspect}, f'#{field}'==nil") if self[field].nil?
-          res << self[field]
-        end
-        return res.hash
-      else
-        row.hash
+      res = []
+      @weights.each_with_index do |_weight, index|
+        field = @columns[index]
+        warn("something wrong, #{inspect}, side #{side.inspect}, f'#{field}'==nil") if self[field].nil?
+        res << self[field]
       end
+      return res.hash
     end
 
     #
@@ -37,19 +33,12 @@ module CSVJoin
     # same order as +other+.
     #
     def ==(other)
-      if @columns
-        @columns.each_with_index do |from, index|
-          to = other.columns[index]
-          # warn "something wrong" if self[from].nil? || other[to].nil?
-          return false unless self[from].eql? other[to]
-        end
-        return true
-      else
-
-        return @row == other.row if other.is_a? CSV::Row
-
-        @row == other
+      @columns.each_with_index do |from, index|
+        to = other.columns[index]
+        # warn "something wrong" if self[from].nil? || other[to].nil?
+        return false unless self[from].eql? other[to]
       end
+      return true
     end
   end
 end

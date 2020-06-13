@@ -35,6 +35,10 @@ class Diff::LCS::NoReplaceDiffCallbacks
 end
 
 module CSVJoin
+  LEFT = 1 # 'left'
+
+  RIGHT = 2 # 'right'
+
   # Compare and join two tables
   class Comparator
     attr_accessor :columns, :weights
@@ -50,7 +54,8 @@ module CSVJoin
 
     def intuit_col_sep(line)
       return "," if line.nil?
-      [",",";","\t"].sort_by { |char| line.count(char) }.last
+
+      [",", ";", "\t"].max_by { |char| line.count(char) }
     end
 
     def intuit_separator(file)
@@ -96,10 +101,6 @@ module CSVJoin
     def prepare_rows(side: nil)
       @rows[side] = csv_to_talimer_rows(@data[side], side: side)
     end
-
-    LEFT = 1 # 'left'
-
-    RIGHT = 2 # 'right'
 
     def prepare(source1, source2)
       parse_side(source1, side: LEFT)

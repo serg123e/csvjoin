@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'spec_helper'
-require File.join(File.dirname(__FILE__), '..', 'lib', 'comparator.rb')
 
 module CSVJoin
   describe 'tabalmer' do
@@ -61,19 +60,17 @@ module CSVJoin
     end
 
     it 'works with tsv' do
-      tmpfiles("A\tB\n1\t2","A\tB\n1\t2") do |f1,f2|
+      tmpfiles("A\tB\n1\t2", "A\tB\n1\t2") do |f1, f2|
         # p Comparator.new.compare(f1,f2)
-        expect( Comparator.new.compare(f1,f2)).to eq "A\tB\tdiff\tA\tB\n1\t2\t===\t1\t2\n"
+        expect(Comparator.new.compare(f1, f2)).to eq "A\tB\tdiff\tA\tB\n1\t2\t===\t1\t2\n"
         # warn("f1#{f1}, f2#{f2}")
       end
-
     end
 
     it 'works with multiline csv' do
-      tmpfiles("A,B\nL0,0\n\"Multi\nL1\",1\nL2,2\nL3,3","A,C\nL0,0\n\"Multi\nL1\",1\nL3,33") do |f1,f2|
-        expect( Comparator.new.compare(f1,
-                                       f2)
-        ).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
+      tmpfiles("A,B\nL0,0\n\"Multi\nL1\",1\nL2,2\nL3,3", "A,C\nL0,0\n\"Multi\nL1\",1\nL3,33") do |f1, f2|
+        expect(Comparator.new.compare(f1,
+                                      f2)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
       end
     end
   end
@@ -83,17 +80,17 @@ module CSVJoin
       @c = Comparator.new
     end
     it 'detects tabs' do
-      expect( @c.intuit_col_sep("A\tB\n")).to eq "\t"
-      expect( @c.intuit_col_sep("A\tB")).to eq "\t"
-      expect( @c.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
+      expect(@c.intuit_col_sep("A\tB\n")).to eq "\t"
+      expect(@c.intuit_col_sep("A\tB")).to eq "\t"
+      expect(@c.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
     end
     it 'detects commas' do
-      expect( @c.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
+      expect(@c.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
     end
 
     it 'detects semicolons' do
-      expect( @c.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
-      expect( @c.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
+      expect(@c.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
+      expect(@c.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
     end
   end
 end
