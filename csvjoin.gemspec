@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   %w[csvjoin.gemspec README.md]
 
   spec.bindir        = 'bin'
-  spec.executables   = ['csvjoin']
+  spec.executables   = ['csvjoin2']
 
   spec.require_paths = ['lib']
   spec.platform      = Gem::Platform::RUBY

@@ -2,6 +2,7 @@
 module Diff
   module LCS
     class NoReplaceDiffCallbacks
+
       # Returns the difference set collected during the diff process.
       attr_reader :diffs
 
