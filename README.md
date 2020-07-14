@@ -51,7 +51,7 @@ now we can see that
 
 ## CSVKit
 There is a great suite CSVKit (https://csvkit.readthedocs.io/en/latest/) with a lot of handful csv tools,
-including the tool `csvjoin` but what it's doing inner/outer join which is not so helpfull in case like described above
+including the tool `csvjoin` but what it's doing inner/outer join which is not so helpful in case like described above
 
 `csvjoin --outer -c name invoices.csv payments.csv`
 
