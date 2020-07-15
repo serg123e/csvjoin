@@ -1,4 +1,5 @@
 coverage/
+tmp/
 .idea
 .yardoc
 doc

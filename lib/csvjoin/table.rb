@@ -1,0 +1,50 @@
+# frozen_string_literal: true
+
+module CSVJoin
+  # represents one table in comparison
+  class Table
+    include ImportantColumns
+    attr_reader :rows, :options, :data
+
+    def initialize(source, opts)
+      self.options = opts
+      self.data = parse(source)
+      self.columns = []
+      self.weights = []
+    end
+
+    def headers
+      data.headers
+    end
+
+    def empty_row
+      [*[''] * headers.size]
+    end
+
+    def prepare_rows
+      @rows = []
+
+      data.each do |csv_row|
+        data_row = DataRow.new(csv_row.headers, csv_row.fields)
+        data_row.important_columns columns
+
+        @rows << data_row
+      end
+    end
+
+    def parse(data)
+      if File.exist? data
+        options.intuit_separator(data)
+        csv = CSV.read(data, options.hash)
+        raise "Wrong CSV" if csv == []
+      else
+        csv = CSV.parse(data, options.hash)
+      end
+      csv
+    end
+
+    private
+
+    attr_writer :data, :options
+  end
+end

@@ -2,21 +2,24 @@
 
 require_relative 'spec_helper'
 
+# scope for all specs
 module CSVJoin
-  describe 'tabalmer' do
+  describe 'Comparator' do
+    before :each do
+      @comparator = Comparator.new
+    end
     it 'finds the difference in slightly modified tables from one source' do
-      t1 = "id,client,price\n" \
+      left = "id,client,price\n" \
            "11,Test,100.0\n" \
            "02,Fest,150.0\n" \
            "13,Best,200.0"
-      t2 = "id,client,price\n" \
+      right = "id,client,price\n" \
            "11,Test,100.0\n" \
            "01,Test,100.0\n" \
            "12,Fest,100.0\n" \
            "13,Best,200.0"
 
-      c = Comparator.new
-      expect(c.compare(t1, t2)).to eq("id,client,price,diff,id,client,price\n" \
+      expect(@comparator.compare(left, right)).to eq("id,client,price,diff,id,client,price\n" \
                                                "11,Test,100.0,===,11,Test,100.0\n" \
                                                '02,Fest,150.0,==>,"","",""' + "\n" \
                                                     '"","","",<==,01,Test,100.0' + "\n" \
@@ -24,24 +27,22 @@ module CSVJoin
                                                "13,Best,200.0,===,13,Best,200.0\n")
     end
     it 'finds the difference in different tables' do
-      t1 = "id,client,price\n" \
+      left = "id,client,price\n" \
            "11,Test,100.0\n" \
            "12,Fest,150.0\n" \
            "16,ZesZ,500.0\n" \
            "13,Best,200.0\n" \
            "15,Zest,500.0\n"
 
-      t2 = "name,payment_date,amount\n" \
+      right = "name,payment_date,amount\n" \
            "Test,2020-04-15,100.0\n" \
            "ZesZ,2020-05-06,500.0\n" \
            "Best,2020-05-01,200.0\n" \
            "Gest,2020-05-06,100.0\n" \
            "Zest,2020-05-06,500.0\n"
 
-      c = Comparator.new
-      c.columns_to_compare('client=name,price=amount')
-      # c.lcs(t1, t2)
-      res = c.compare(t1, t2)
+      @comparator.set_columns_to_compare('client=name,price=amount')
+      res = @comparator.compare(left, right)
       expect(res).to eq(
         "id,client,price,diff,name,payment_date,amount\n" \
         "11,Test,100.0,===,Test,2020-04-15,100.0\n" \
@@ -53,44 +54,46 @@ module CSVJoin
       )
     end
     it 'can parse column param' do
-      c = Comparator.new
-      c.columns_to_compare('client=name,amount~price')
-      expect(c.columns).to eq([%w[client name], %w[amount price]])
-      expect(c.weights).to eq([1, 0])
+      @comparator.set_columns_to_compare('client=name,amount~price')
+      @comparator.compare("client,amount\nsdasd,100", "name,price\nsdasd,100")
+      # c.set_default_column_names
+
+      expect(@comparator.left.columns).to eq(%w[client amount])
+      expect(@comparator.right.columns).to eq(%w[name price])
+      expect(@comparator.left.weights).to eq([1, 0])
     end
 
     it 'works with tsv' do
-      tmpfiles("A\tB\n1\t2", "A\tB\n1\t2") do |f1, f2|
-        # p Comparator.new.compare(f1,f2)
-        expect(Comparator.new.compare(f1, f2)).to eq "A\tB\tdiff\tA\tB\n1\t2\t===\t1\t2\n"
-        # warn("f1#{f1}, f2#{f2}")
+      tmpfiles("A\tB\n1\t2", "A\tB\n1\t2") do |file_left, file_right|
+        expect(@comparator.compare(file_left, file_right)).to eq "A\tB\tdiff\tA\tB\n1\t2\t===\t1\t2\n"
       end
     end
 
     it 'works with multiline csv' do
-      tmpfiles("A,B\nL0,0\n\"Multi\nL1\",1\nL2,2\nL3,3", "A,C\nL0,0\n\"Multi\nL1\",1\nL3,33") do |f1, f2|
-        expect(Comparator.new.compare(f1,
-                                      f2)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
+      tmpfiles("A,B\nL0,0\n\"Multi\nL1\",1\nL2,2\nL3,3", "A,C\nL0,0\n\"Multi\nL1\",1\nL3,33") do |file_left, file_right|
+        expect(@comparator.compare(file_left,
+                                   file_right)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
       end
     end
   end
 
-  describe '#intuit_col_sep' do
-    before :all do
-      @c = Comparator.new
+  describe 'Options' do
+    before :each do
+      @options = Options.new
+      # @c = ComparatorUtils.new()
     end
     it 'detects tabs' do
-      expect(@c.intuit_col_sep("A\tB\n")).to eq "\t"
-      expect(@c.intuit_col_sep("A\tB")).to eq "\t"
-      expect(@c.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
+      expect(@options.intuit_col_sep("A\tB\n")).to eq "\t"
+      expect(@options.intuit_col_sep("A\tB")).to eq "\t"
+      expect(@options.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
     end
     it 'detects commas' do
-      expect(@c.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
+      expect(@options.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
     end
 
     it 'detects semicolons' do
-      expect(@c.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
-      expect(@c.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
+      expect(@options.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
+      expect(@options.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
     end
   end
 end

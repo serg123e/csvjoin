@@ -5,13 +5,9 @@ require 'csv'
 module CSVJoin
   # CSV::Row with specified important columns to compare
   class DataRow < CSV::Row
-    attr_accessor :columns, :weights
-    attr_reader :side
-
-    attr_writer :side
-
+    include ImportantColumns
     def inspect
-      "#{side}:#{super}"
+      "noside:#{super}"
     end
 
     def eql?(other)
@@ -22,7 +18,7 @@ module CSVJoin
       res = []
       @weights.each_with_index do |_weight, index|
         field = @columns[index]
-        warn("something wrong, #{inspect}, side #{side.inspect}, f'#{field}'==nil") if self[field].nil?
+        # warn("something wrong, #{inspect}, f'#{field}'==nil") if self[field].nil?
         res << self[field]
       end
       return res.hash

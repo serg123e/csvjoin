@@ -6,23 +6,20 @@ module CSVJoin
   describe 'DataRow' do
     before :each do
       @row = DataRow.new(%w[A B], %w[1 2])
-      @row.side = LEFT
-      @row.columns = ["A"]
-      @row.weights = [1]
+      # @row.side = LEFT
+      @row.important_columns(["A"])
 
       @row2 = DataRow.new(%w[Z X], %w[1 2])
-      @row2.side = RIGHT
-      @row2.columns = ["Z"]
-      @row2.weights = [1]
+      # @row2.side = RIGHT
+      @row2.important_columns(["Z"])
 
       @row3 = DataRow.new(%w[K L], %w[3 4])
-      @row2.side = RIGHT
-      @row3.columns = ["K"]
-      @row3.weights = [1]
+      # @row2.side = RIGHT
+      @row3.important_columns(["K"])
     end
 
     it 'inspect' do
-      expect(@row.inspect).to eq "#{LEFT}:#<CSVJoin::DataRow \"A\":\"1\" \"B\":\"2\">"
+      expect(@row.inspect).to eq "noside:#<CSVJoin::DataRow \"A\":\"1\" \"B\":\"2\">"
     end
 
     it '==' do
