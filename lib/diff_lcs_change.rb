@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Diff
   module LCS
     # monkey patching Change for additional behaviour

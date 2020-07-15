@@ -9,7 +9,7 @@ module CSVJoin
       else
         comparator = CSVJoin::Comparator.new
         file_left, file_right, params = argv
-        comparator.set_columns_to_compare(params) if params
+        comparator.columns_to_compare = params if params
         puts comparator.compare(file_left, file_right)
       end
     end

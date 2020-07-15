@@ -41,7 +41,7 @@ module CSVJoin
            "Gest,2020-05-06,100.0\n" \
            "Zest,2020-05-06,500.0\n"
 
-      @comparator.set_columns_to_compare('client=name,price=amount')
+      @comparator.columns_to_compare='client=name,price=amount'
       res = @comparator.compare(left, right)
       expect(res).to eq(
         "id,client,price,diff,name,payment_date,amount\n" \
@@ -54,7 +54,7 @@ module CSVJoin
       )
     end
     it 'can parse column param' do
-      @comparator.set_columns_to_compare('client=name,amount~price')
+      @comparator.columns_to_compare=('client=name,amount~price')
       @comparator.compare("client,amount\nsdasd,100", "name,price\nsdasd,100")
       # c.set_default_column_names
 

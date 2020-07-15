@@ -4,7 +4,8 @@ require_relative 'important_columns'
 require_relative 'data_row'
 require_relative 'app'
 require_relative 'options'
-require_relative 'callbacks'
+require_relative '../diff_lcs_callbacks'
+require_relative '../diff_lcs_change'
 require_relative 'table'
 require 'diff/lcs'
 
@@ -35,7 +36,7 @@ module CSVJoin
     def set_default_column_names
       if columns_to_compare
         columns_to_compare.scan(/([^,:=~]+)([=~])([^,:=~]+)/).each do |from, operator, to|
-          weight = (operator.eql? '=') ? 1 : 0
+          weight = operator.eql?('=') ? 1 : 0
           left.add_column from, weight
           right.add_column to, weight
         end
@@ -64,11 +65,7 @@ module CSVJoin
       generate_csv(diffs)
     end
 
-    def set_columns_to_compare(cols)
-      # @columns = []
-
-      @columns_to_compare = cols
-    end
+    attr_writer :columns_to_compare
 
     private
 
