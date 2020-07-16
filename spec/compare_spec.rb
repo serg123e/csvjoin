@@ -41,7 +41,7 @@ module CSVJoin
            "Gest,2020-05-06,100.0\n" \
            "Zest,2020-05-06,500.0\n"
 
-      @comparator.columns_to_compare='client=name,price=amount'
+      @comparator.columns_to_compare = 'client=name,price=amount'
       res = @comparator.compare(left, right)
       expect(res).to eq(
         "id,client,price,diff,name,payment_date,amount\n" \
@@ -54,7 +54,7 @@ module CSVJoin
       )
     end
     it 'can parse column param' do
-      @comparator.columns_to_compare=('client=name,amount~price')
+      @comparator.columns_to_compare = 'client=name,amount~price'
       @comparator.compare("client,amount\nsdasd,100", "name,price\nsdasd,100")
       # c.set_default_column_names
 
@@ -74,26 +74,6 @@ module CSVJoin
         expect(@comparator.compare(file_left,
                                    file_right)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
       end
-    end
-  end
-
-  describe 'Options' do
-    before :each do
-      @options = Options.new
-      # @c = ComparatorUtils.new()
-    end
-    it 'detects tabs' do
-      expect(@options.intuit_col_sep("A\tB\n")).to eq "\t"
-      expect(@options.intuit_col_sep("A\tB")).to eq "\t"
-      expect(@options.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
-    end
-    it 'detects commas' do
-      expect(@options.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
-    end
-
-    it 'detects semicolons' do
-      expect(@options.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
-      expect(@options.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
     end
   end
 end
