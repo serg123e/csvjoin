@@ -72,7 +72,9 @@ module CSVJoin
     it 'works with multiline csv' do
       tmpfiles("A,B\nL0,0\n\"Multi\nL1\",1\nL2,2\nL3,3", "A,C\nL0,0\n\"Multi\nL1\",1\nL3,33") do |file_left, file_right|
         expect(@comparator.compare(file_left,
-                                   file_right)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n\"Multi\nL1\",1,===,\"Multi\nL1\",1\nL2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
+                                   file_right)).to eq "A,B,diff,A,C\nL0,0,===,L0,0\n" \
+                                                      "\"Multi\nL1\",1,===,\"Multi\nL1\",1\n" \
+                                                      "L2,2,==>,\"\",\"\"\nL3,3,===,L3,33\n"
       end
     end
   end

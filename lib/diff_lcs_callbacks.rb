@@ -16,19 +16,12 @@ module Diff
       def match(event)
         @diffs << Diff::LCS::ContextChange.simplify(event)
       end
-
-      def discard_a(event)
-        @diffs << Diff::LCS::ContextChange.simplify(event)
-      end
-
-      def discard_b(event)
-        @diffs << Diff::LCS::ContextChange.simplify(event)
-      end
+      alias discard_a match
+      alias discard_b match
 
       def change(event)
-        discard_a(Diff::LCS::ContextChange.new("<", event.old_position, event.old_element, nil, nil))
-        discard_b(Diff::LCS::ContextChange.new(">", nil, nil, event.new_position, event.new_element))
-        # @diffs << Diff::LCS::ContextChange.simplify(event)
+        match(Diff::LCS::ContextChange.new("<", event.old_position, event.old_element, nil, nil))
+        match(Diff::LCS::ContextChange.new(">", nil, nil, event.new_position, event.new_element))
       end
     end
   end

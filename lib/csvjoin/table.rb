@@ -18,7 +18,7 @@ module CSVJoin
     end
 
     def empty_row
-      [*[''] * headers.size]
+      Array.new(headers.size) { '' }
     end
 
     def prepare_rows

@@ -16,7 +16,6 @@ Gem::Specification.new do |spec|
   spec.license       = 'MIT'
 
   spec.files = Dir['lib/**/*.rb']
-  %w[csvjoin.gemspec README.md]
 
   spec.bindir        = 'bin'
   spec.executables   = ['csvjoin2']
@@ -24,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
   spec.platform      = Gem::Platform::RUBY
 
-  spec.required_ruby_version = '~> 2.0'
+  spec.required_ruby_version = '~> 2.4'
 
   spec.add_dependency 'diff-lcs', '~> 1.3'
   spec.add_development_dependency 'bundler', '~> 2.0'
