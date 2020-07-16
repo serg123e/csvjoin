@@ -21,7 +21,7 @@ module CSVJoin
         # warn("something wrong, #{inspect}, f'#{field}'==nil") if self[field].nil?
         res << self[field]
       end
-      return res.hash
+      res.hash
     end
 
     #
@@ -34,7 +34,7 @@ module CSVJoin
         # warn "something wrong" if self[from].nil? || other[to].nil?
         return false unless self[from].eql? other[to]
       end
-      return true
+      true
     end
   end
 end

@@ -16,7 +16,7 @@ Style/StringLiterals:
 
 # explicit return makes code more readable
 Style/RedundantReturn:
-  Enabled: false
+  Enabled: true
 
 # String#% is by far the least verbose and only object oriented variant.
 Style/FormatString:
