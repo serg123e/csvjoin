@@ -7,17 +7,17 @@ module CSVJoin
       # @c = ComparatorUtils.new()
     end
     it 'detects tabs' do
-      expect(@options.intuit_col_sep("A\tB\n")).to eq "\t"
-      expect(@options.intuit_col_sep("A\tB")).to eq "\t"
-      expect(@options.intuit_col_sep("Test,Field\tBest\tAsd")).to eq "\t"
+      expect(@options.suggest_sep("A\tB\n")).to eq "\t"
+      expect(@options.suggest_sep("A\tB")).to eq "\t"
+      expect(@options.suggest_sep("Test,Field\tBest\tAsd")).to eq "\t"
     end
     it 'detects commas' do
-      expect(@options.intuit_col_sep("Test,Field,Best\tAsd")).to eq ","
+      expect(@options.suggest_sep("Test,Field,Best\tAsd")).to eq ","
     end
 
     it 'detects semicolons' do
-      expect(@options.intuit_col_sep("Test;Field;Best\tAsd\n")).to eq ";"
-      expect(@options.intuit_col_sep("Test\tField;Best;Asd")).to eq ";"
+      expect(@options.suggest_sep("Test;Field;Best\tAsd\n")).to eq ";"
+      expect(@options.suggest_sep("Test\tField;Best;Asd")).to eq ";"
     end
   end
 end

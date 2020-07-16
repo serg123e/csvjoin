@@ -9,8 +9,8 @@ module ImportantColumns
     @weights << weight
   end
 
-  def important_columns(cols)
-    @columns = cols
+  def define_important_columns(columns)
+    @columns = columns
     @weights = [*[1] * @columns.size]
   end
 

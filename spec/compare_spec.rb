@@ -19,12 +19,13 @@ module CSVJoin
            "12,Fest,100.0\n" \
            "13,Best,200.0"
 
+      # @comparator.columns_to_compare = 'client=client,price=price'
       expect(@comparator.compare(left, right)).to eq("id,client,price,diff,id,client,price\n" \
-                                               "11,Test,100.0,===,11,Test,100.0\n" \
-                                               '02,Fest,150.0,==>,"","",""' + "\n" \
-                                                    '"","","",<==,01,Test,100.0' + "\n" \
-                                                    '"","","",<==,12,Fest,100.0' + "\n" \
-                                               "13,Best,200.0,===,13,Best,200.0\n")
+                                                     "11,Test,100.0,===,11,Test,100.0\n" \
+                                                     '02,Fest,150.0,==>,"","",""' + "\n" \
+                                                     '"","","",<==,01,Test,100.0' + "\n" \
+                                                     '"","","",<==,12,Fest,100.0' + "\n" \
+                                                     "13,Best,200.0,===,13,Best,200.0\n")
     end
     it 'finds the difference in different tables' do
       left = "id,client,price\n" \

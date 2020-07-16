@@ -7,15 +7,15 @@ module CSVJoin
     before :each do
       @row = DataRow.new(%w[A B], %w[1 2])
       # @row.side = LEFT
-      @row.important_columns(["A"])
+      @row.define_important_columns(["A"])
 
       @row2 = DataRow.new(%w[Z X], %w[1 2])
       # @row2.side = RIGHT
-      @row2.important_columns(["Z"])
+      @row2.define_important_columns(["Z"])
 
       @row3 = DataRow.new(%w[K L], %w[3 4])
       # @row2.side = RIGHT
-      @row3.important_columns(["K"])
+      @row3.define_important_columns(["K"])
     end
 
     it 'inspect' do

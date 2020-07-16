@@ -26,7 +26,7 @@ module CSVJoin
 
       data.each do |csv_row|
         data_row = DataRow.new(csv_row.headers, csv_row.fields)
-        data_row.important_columns columns
+        data_row.define_important_columns columns
 
         @rows << data_row
       end
@@ -34,7 +34,7 @@ module CSVJoin
 
     def parse(data)
       if File.exist? data
-        options.intuit_separator(data)
+        options.suggest_sep_file(data)
         csv = CSV.read(data, options.hash)
         raise "Wrong CSV" if csv == []
       else

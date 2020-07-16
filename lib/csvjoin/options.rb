@@ -15,13 +15,13 @@ module CSVJoin
       self.columns_to_compare = columns_to_compare
     end
 
-    def intuit_col_sep(line)
+    def suggest_sep(line)
       %W[, ; \t].max_by { |char| line.count(char) }
     end
 
-    def intuit_separator(file)
+    def suggest_sep_file(file)
       File.open(file, encoding: 'bom|utf-8').each do |line|
-        self.col_sep = intuit_col_sep(line)
+        self.col_sep = suggest_sep(line)
         break
       end
       file
