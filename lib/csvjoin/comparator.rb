@@ -12,7 +12,10 @@ require 'diff/lcs'
 module CSVJoin
   # Compare and join two tables
   class Comparator
-    attr_reader :left, :right, :options, :columns_to_compare
+    attr_reader :left, :right, :options
+
+    extend Forwardable
+    def_delegators :@options, :columns_to_compare, :columns_to_compare=
 
     def initialize(options = Options.new(col_sep: ","))
       self.options = options
@@ -34,16 +37,17 @@ module CSVJoin
 
     # by default use columns with same names in both tables
     def set_default_column_names
-      if columns_to_compare
+      if !columns_to_compare.empty?
         columns_to_compare.scan(/([^,:=~]+)([=~])([^,:=~]+)/).each do |from, operator, to|
           weight = operator.eql?('=') ? 1 : 0
           left.add_column from, weight
           right.add_column to, weight
         end
       else
+
         columns = (left.headers & right.headers)
-        left.important_columns(columns)
-        right.important_columns(columns)
+        left.define_important_columns(columns)
+        right.define_important_columns(columns)
       end
     end
 
@@ -64,8 +68,6 @@ module CSVJoin
                               Diff::LCS::NoReplaceDiffCallbacks)
       generate_csv(diffs)
     end
-
-    attr_writer :columns_to_compare
 
     private
 
