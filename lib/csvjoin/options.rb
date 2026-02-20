@@ -20,10 +20,8 @@ module CSVJoin
     end
 
     def suggest_sep_file(file)
-      File.open(file, encoding: 'bom|utf-8').each do |line|
-        self.col_sep = suggest_sep(line)
-        break
-      end
+      first_line = File.open(file, encoding: 'bom|utf-8', &:readline)
+      self.col_sep = suggest_sep(first_line)
       file
     end
 

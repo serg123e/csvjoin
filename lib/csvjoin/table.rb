@@ -4,6 +4,7 @@ module CSVJoin
   # represents one table in comparison
   class Table
     include ImportantColumns
+
     attr_reader :rows, :options, :data
 
     def initialize(source, opts)
@@ -35,10 +36,10 @@ module CSVJoin
     def parse(data)
       if File.exist? data
         options.suggest_sep_file(data)
-        csv = CSV.read(data, options.hash)
+        csv = CSV.read(data, **options.hash)
         raise "Wrong CSV" if csv == []
       else
-        csv = CSV.parse(data, options.hash)
+        csv = CSV.parse(data, **options.hash)
       end
       csv
     end

@@ -6,6 +6,7 @@ module CSVJoin
   # CSV::Row with specified important columns to compare
   class DataRow < CSV::Row
     include ImportantColumns
+
     def inspect
       "noside:#{super}"
     end

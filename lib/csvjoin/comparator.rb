@@ -15,6 +15,7 @@ module CSVJoin
     attr_reader :left, :right, :options
 
     extend Forwardable
+
     def_delegators :@options, :columns_to_compare, :columns_to_compare=
 
     def initialize(options = Options.new(col_sep: ","))
@@ -37,22 +38,22 @@ module CSVJoin
 
     # by default use columns with same names in both tables
     def set_default_column_names
-      if !columns_to_compare.empty?
+      if columns_to_compare.empty?
+
+        columns = (left.headers & right.headers)
+        left.define_important_columns(columns)
+        right.define_important_columns(columns)
+      else
         columns_to_compare.scan(/([^,:=~]+)([=~])([^,:=~]+)/).each do |from, operator, to|
           weight = operator.eql?('=') ? 1 : 0
           left.add_column from, weight
           right.add_column to, weight
         end
-      else
-
-        columns = (left.headers & right.headers)
-        left.define_important_columns(columns)
-        right.define_important_columns(columns)
       end
     end
 
     def generate_csv(diffs)
-      CSV.generate(options.hash) do |csv|
+      CSV.generate(**options.hash) do |csv|
         csv << [*left.headers, "diff", *right.headers]
 
         diffs.each do |change|
