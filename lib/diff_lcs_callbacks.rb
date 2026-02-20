@@ -7,7 +7,7 @@ module Diff
       # Returns the difference set collected during the diff process.
       attr_reader :diffs
 
-      #:yields self:
+      # :yields self:
       def initialize
         @diffs = []
         yield self if block_given?
