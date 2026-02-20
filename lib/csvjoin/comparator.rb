@@ -62,8 +62,8 @@ module CSVJoin
       end
     end
 
-    def compare(source_left, source_rigth)
-      prepare(source_left, source_rigth)
+    def compare(source_left, source_right)
+      prepare(source_left, source_right)
       diffs = Diff::LCS.sdiff(left.rows,
                               right.rows,
                               Diff::LCS::NoReplaceDiffCallbacks)

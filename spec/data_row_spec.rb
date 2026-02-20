@@ -38,5 +38,93 @@ module CSVJoin
     it '#eql?' do
       expect(@row.eql?(@row2)).to be true
     end
+
+    it 'returns different hash for different values' do
+      expect(@row.hash).not_to eq(@row3.hash)
+    end
+
+    it 'compares with multiple important columns' do
+      row_a = DataRow.new(%w[X Y], %w[1 2])
+      row_a.define_important_columns(%w[X Y])
+
+      row_b = DataRow.new(%w[X Y], %w[1 2])
+      row_b.define_important_columns(%w[X Y])
+
+      expect(row_a == row_b).to be true
+      expect(row_a.hash).to eq(row_b.hash)
+    end
+
+    it 'detects inequality when one of multiple important columns differs' do
+      row_a = DataRow.new(%w[X Y], %w[1 2])
+      row_a.define_important_columns(%w[X Y])
+
+      row_b = DataRow.new(%w[X Y], %w[1 99])
+      row_b.define_important_columns(%w[X Y])
+
+      expect(row_a == row_b).to be false
+      expect(row_a.hash).not_to eq(row_b.hash)
+    end
+
+    it 'treats nil values as equal when both sides have nil' do
+      row_a = DataRow.new(%w[A], [nil])
+      row_a.define_important_columns(["A"])
+
+      row_b = DataRow.new(%w[A], [nil])
+      row_b.define_important_columns(["A"])
+
+      expect(row_a == row_b).to be true
+      expect(row_a.hash).to eq(row_b.hash)
+    end
+
+    it 'treats nil as different from a string value' do
+      row_a = DataRow.new(%w[A], [nil])
+      row_a.define_important_columns(["A"])
+
+      row_b = DataRow.new(%w[A], ["value"])
+      row_b.define_important_columns(["A"])
+
+      expect(row_a == row_b).to be false
+    end
+
+    it 'treats empty string as different from nil' do
+      row_a = DataRow.new(%w[A], [""])
+      row_a.define_important_columns(["A"])
+
+      row_b = DataRow.new(%w[A], [nil])
+      row_b.define_important_columns(["A"])
+
+      expect(row_a == row_b).to be false
+    end
+
+    it 'handles rows with Unicode values' do
+      row_a = DataRow.new(%w[name], ["Алиса"])
+      row_a.define_important_columns(["name"])
+
+      row_b = DataRow.new(%w[name], ["Алиса"])
+      row_b.define_important_columns(["name"])
+
+      expect(row_a == row_b).to be true
+      expect(row_a.hash).to eq(row_b.hash)
+    end
+
+    it 'compares only important columns, ignoring others' do
+      row_a = DataRow.new(%w[id name score], %w[1 Alice 100])
+      row_a.define_important_columns(["name"])
+
+      row_b = DataRow.new(%w[id name score], %w[999 Alice 999])
+      row_b.define_important_columns(["name"])
+
+      expect(row_a == row_b).to be true
+    end
+
+    it 'uses add_column with weight' do
+      row_a = DataRow.new(%w[A B], %w[1 2])
+      row_a.define_important_columns([])
+      row_a.add_column("A", 1)
+      row_a.add_column("B", 0)
+
+      expect(row_a.columns).to eq(%w[A B])
+      expect(row_a.weights).to eq([1, 0])
+    end
   end
 end

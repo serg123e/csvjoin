@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Ability to differ important for comparsion columns from others
+# Ability to differ important for comparison columns from others
 module ImportantColumns
   attr_reader :columns, :weights
 

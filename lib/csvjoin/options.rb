@@ -23,6 +23,8 @@ module CSVJoin
       first_line = File.open(file, encoding: 'bom|utf-8', &:readline)
       self.col_sep = suggest_sep(first_line)
       file
+    rescue EOFError
+      file
     end
 
     private
