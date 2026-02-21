@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.1'
 
   spec.add_dependency 'csv', '~> 3.0'
-  spec.add_dependency 'diff-lcs', '~> 1.6'
+  spec.add_dependency 'diff-lcs', '>= 1.6', '< 3.0'
   spec.add_development_dependency 'bundler', '~> 2.5'
   spec.add_development_dependency 'rake', '~> 13.0'
 
