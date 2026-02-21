@@ -127,6 +127,70 @@ module CSVJoin
       expect(row_a.weights).to eq([1, 0])
     end
 
+    context 'weak (~) comparison' do
+      it 'matches rows that differ only in weak columns' do
+        row_a = DataRow.new(%w[id amount], %w[1 100])
+        row_a.define_important_columns([])
+        row_a.add_column("id", 1)
+        row_a.add_column("amount", 0)
+
+        row_b = DataRow.new(%w[id amount], %w[1 999])
+        row_b.define_important_columns([])
+        row_b.add_column("id", 1)
+        row_b.add_column("amount", 0)
+
+        expect(row_a == row_b).to be true
+        expect(row_a.hash).to eq(row_b.hash)
+      end
+
+      it 'does not match rows that differ in strict columns' do
+        row_a = DataRow.new(%w[id amount], %w[1 100])
+        row_a.define_important_columns([])
+        row_a.add_column("id", 1)
+        row_a.add_column("amount", 0)
+
+        row_b = DataRow.new(%w[id amount], %w[2 100])
+        row_b.define_important_columns([])
+        row_b.add_column("id", 1)
+        row_b.add_column("amount", 0)
+
+        expect(row_a == row_b).to be false
+        expect(row_a.hash).not_to eq(row_b.hash)
+      end
+
+      it 'matches all rows when all columns are weak' do
+        row_a = DataRow.new(%w[x y], %w[1 2])
+        row_a.define_important_columns([])
+        row_a.add_column("x", 0)
+        row_a.add_column("y", 0)
+
+        row_b = DataRow.new(%w[x y], %w[9 9])
+        row_b.define_important_columns([])
+        row_b.add_column("x", 0)
+        row_b.add_column("y", 0)
+
+        expect(row_a == row_b).to be true
+        expect(row_a.hash).to eq(row_b.hash)
+      end
+
+      it 'works with ignore_case on strict columns' do
+        row_a = DataRow.new(%w[name amount], %w[Alice 100])
+        row_a.define_important_columns([])
+        row_a.add_column("name", 1)
+        row_a.add_column("amount", 0)
+        row_a.ignore_case = true
+
+        row_b = DataRow.new(%w[name amount], %w[alice 999])
+        row_b.define_important_columns([])
+        row_b.add_column("name", 1)
+        row_b.add_column("amount", 0)
+        row_b.ignore_case = true
+
+        expect(row_a == row_b).to be true
+        expect(row_a.hash).to eq(row_b.hash)
+      end
+    end
+
     context 'case-insensitive comparison' do
       it 'matches values with different case when ignore_case is true' do
         row_a = DataRow.new(%w[name], ["Alice"])

@@ -19,7 +19,9 @@ module CSVJoin
 
     def hash
       res = []
-      @weights.each_with_index do |_weight, index|
+      @weights.each_with_index do |weight, index|
+        next unless weight.positive?
+
         field = @columns[index]
         val = self[field]
         val = val&.downcase if @ignore_case
@@ -34,6 +36,8 @@ module CSVJoin
     #
     def ==(other)
       @columns.each_with_index do |from, index|
+        next unless @weights[index].positive?
+
         to = other.columns[index]
         left_val = self[from]
         right_val = other[to]

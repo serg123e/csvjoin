@@ -203,6 +203,28 @@ module CSVJoin
       expect(@comparator.left.weights).to eq([0])
     end
 
+    it 'weak (~) columns do not affect row matching' do
+      left = "client,amount\nAlice,100\nBob,200"
+      right = "name,sum\nAlice,999\nBob,888"
+      @comparator.columns_to_compare = 'client=name,amount~sum'
+      result = @comparator.compare(left, right)
+      # Rows match on client=name (strict), amount~sum values differ but rows still pair
+      expect(result).to eq(
+        "client,amount,diff,name,sum\n" \
+        "Alice,100,===,Alice,999\n" \
+        "Bob,200,===,Bob,888\n"
+      )
+    end
+
+    it 'strict (=) columns still control matching when mixed with weak (~)' do
+      left = "client,amount\nAlice,100\nBob,200"
+      right = "name,sum\nCharlie,100\nDave,200"
+      @comparator.columns_to_compare = 'client=name,amount~sum'
+      result = @comparator.compare(left, right)
+      # No match on strict column (client vs name), so all rows unmatched
+      expect(result).not_to include("===")
+    end
+
     it 'handles tables with many columns' do
       headers = (1..10).map { |i| "col#{i}" }.join(",")
       row = (1..10).map(&:to_s).join(",")
