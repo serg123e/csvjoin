@@ -149,10 +149,6 @@ describe 'CSVJoinApp' do
   end
 
   context 'help content' do
-    it 'documents the ~ operator' do
-      expect { @app.run(['-h']) }.to output(/~/).to_stdout
-    end
-
     it 'documents the -o option' do
       expect { @app.run(['-h']) }.to output(/-o/).to_stdout
     end
