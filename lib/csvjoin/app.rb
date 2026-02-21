@@ -35,7 +35,7 @@ module CSVJoin
     def build_parser(options)
       show_help = false
       parser = OptionParser.new do |opts|
-        opts.banner = "Usage: csvjoin2 [options] FILE1 FILE2 [COL1=COL2,COL3~COL4]"
+        opts.banner = "Usage: csvjoin2 [options] FILE1 FILE2 [COL1=COL2,COL3=COL4]"
         add_banner_text(opts)
         add_file_options(opts, options)
         add_comparison_options(opts, options)
@@ -53,8 +53,7 @@ module CSVJoin
       opts.separator "If no columns specified, uses columns with the same name in both files."
       opts.separator ""
       opts.separator "Column operators:"
-      opts.separator "  =    strict match (e.g. client=name)"
-      opts.separator "  ~    weak match (e.g. client~name)"
+      opts.separator "  =    match (e.g. client=name)"
       opts.separator ""
       opts.separator "Options:"
     end
