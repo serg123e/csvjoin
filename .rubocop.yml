@@ -18,6 +18,14 @@ Metrics/BlockLength:
   Exclude:
     - spec/**/*
 
+Metrics/ModuleLength:
+  Exclude:
+    - spec/**/*
+
+Style/StringConcatenation:
+  Exclude:
+    - spec/**/*
+
 Layout/LineEndStringConcatenationIndentation:
   Exclude:
     - spec/**/*

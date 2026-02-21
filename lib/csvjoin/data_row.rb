@@ -7,6 +7,8 @@ module CSVJoin
   class DataRow < CSV::Row
     include ImportantColumns
 
+    attr_accessor :ignore_case
+
     def inspect
       "noside:#{super}"
     end
@@ -19,8 +21,9 @@ module CSVJoin
       res = []
       @weights.each_with_index do |_weight, index|
         field = @columns[index]
-        # warn("something wrong, #{inspect}, f'#{field}'==nil") if self[field].nil?
-        res << self[field]
+        val = self[field]
+        val = val&.downcase if @ignore_case
+        res << val
       end
       res.hash
     end
@@ -32,8 +35,13 @@ module CSVJoin
     def ==(other)
       @columns.each_with_index do |from, index|
         to = other.columns[index]
-        # warn "something wrong" if self[from].nil? || other[to].nil?
-        return false unless self[from].eql? other[to]
+        left_val = self[from]
+        right_val = other[to]
+        if @ignore_case
+          left_val = left_val&.downcase
+          right_val = right_val&.downcase
+        end
+        return false unless left_val.eql? right_val
       end
       true
     end

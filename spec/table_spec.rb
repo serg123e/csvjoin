@@ -44,7 +44,7 @@ module CSVJoin
         opts = Options.new
         table = Table.new(file_left, opts)
         expect(table.headers).to eq(%w[A B])
-        expect(opts.col_sep).to eq("\t")
+        expect(table.options.col_sep).to eq("\t")
       end
     end
 
@@ -53,7 +53,15 @@ module CSVJoin
         opts = Options.new
         table = Table.new(file_left, opts)
         expect(table.headers).to eq(%w[A B])
-        expect(opts.col_sep).to eq(";")
+        expect(table.options.col_sep).to eq(";")
+      end
+    end
+
+    it 'does not modify the original options when auto-detecting separator' do
+      tmpfiles("A\tB\n1\t2", "X\tY\n3\t4") do |file_left, _file_right|
+        opts = Options.new
+        Table.new(file_left, opts)
+        expect(opts.col_sep).to eq(",")
       end
     end
 
@@ -78,6 +86,51 @@ module CSVJoin
       table.add_column("b", 0)
       expect(table.columns).to eq(%w[a b])
       expect(table.weights).to eq([1, 0])
+    end
+
+    context 'file vs string detection' do
+      it 'treats string with newlines as CSV data, not file path' do
+        opts = Options.new
+        table = Table.new("a\n1", opts)
+        expect(table.headers).to eq(%w[a])
+      end
+
+      it 'raises error for path-like string that does not exist' do
+        opts = Options.new
+        expect { Table.new("/tmp/nonexistent_file.csv", opts) }.to raise_error(RuntimeError, /File not found/)
+      end
+
+      it 'raises error for .tsv extension that does not exist' do
+        opts = Options.new
+        expect { Table.new("data.tsv", opts) }.to raise_error(RuntimeError, /File not found/)
+      end
+
+      it 'raises error for .txt extension that does not exist' do
+        opts = Options.new
+        expect { Table.new("data.txt", opts) }.to raise_error(RuntimeError, /File not found/)
+      end
+
+      it 'raises error for path with separator that does not exist' do
+        opts = Options.new
+        expect { Table.new("some/path", opts) }.to raise_error(RuntimeError, /File not found/)
+      end
+    end
+
+    context 'ignore_case propagation' do
+      it 'sets ignore_case on DataRow during prepare_rows' do
+        opts = Options.new(ignore_case: true)
+        table = Table.new("a\n1", opts)
+        table.define_important_columns(%w[a])
+        table.prepare_rows
+        expect(table.rows.first.ignore_case).to be true
+      end
+    end
+
+    context 'malformed CSV' do
+      it 'raises error for malformed CSV data' do
+        opts = Options.new
+        expect { Table.new("a,b\n\"unclosed quote,2", opts) }.to raise_error(RuntimeError, /Invalid CSV/)
+      end
     end
   end
 end

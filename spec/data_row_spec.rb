@@ -126,5 +126,56 @@ module CSVJoin
       expect(row_a.columns).to eq(%w[A B])
       expect(row_a.weights).to eq([1, 0])
     end
+
+    context 'case-insensitive comparison' do
+      it 'matches values with different case when ignore_case is true' do
+        row_a = DataRow.new(%w[name], ["Alice"])
+        row_a.define_important_columns(["name"])
+        row_a.ignore_case = true
+
+        row_b = DataRow.new(%w[name], ["alice"])
+        row_b.define_important_columns(["name"])
+        row_b.ignore_case = true
+
+        expect(row_a == row_b).to be true
+      end
+
+      it 'produces same hash for different case when ignore_case is true' do
+        row_a = DataRow.new(%w[name], ["Alice"])
+        row_a.define_important_columns(["name"])
+        row_a.ignore_case = true
+
+        row_b = DataRow.new(%w[name], ["ALICE"])
+        row_b.define_important_columns(["name"])
+        row_b.ignore_case = true
+
+        expect(row_a.hash).to eq(row_b.hash)
+      end
+
+      it 'does not match different case when ignore_case is false' do
+        row_a = DataRow.new(%w[name], ["Alice"])
+        row_a.define_important_columns(["name"])
+        row_a.ignore_case = false
+
+        row_b = DataRow.new(%w[name], ["alice"])
+        row_b.define_important_columns(["name"])
+        row_b.ignore_case = false
+
+        expect(row_a == row_b).to be false
+      end
+
+      it 'handles nil values with ignore_case true' do
+        row_a = DataRow.new(%w[A], [nil])
+        row_a.define_important_columns(["A"])
+        row_a.ignore_case = true
+
+        row_b = DataRow.new(%w[A], [nil])
+        row_b.define_important_columns(["A"])
+        row_b.ignore_case = true
+
+        expect(row_a == row_b).to be true
+        expect(row_a.hash).to eq(row_b.hash)
+      end
+    end
   end
 end
