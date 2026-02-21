@@ -4,7 +4,6 @@ module CSVJoin
   describe 'Options' do
     before :each do
       @options = Options.new
-      # @c = ComparatorUtils.new()
     end
     it 'detects tabs' do
       expect(@options.suggest_sep("A\tB\n")).to eq "\t"
@@ -52,8 +51,8 @@ module CSVJoin
       expect(opts.columns_to_compare).to eq("a=b")
     end
 
-    it 'returns correct hash for CSV parsing' do
-      h = @options.hash
+    it 'returns correct csv_options for CSV parsing' do
+      h = @options.csv_options
       expect(h).to eq({ headers: true, row_sep: "\n", col_sep: "," })
     end
 
@@ -76,6 +75,40 @@ module CSVJoin
         @options.suggest_sep_file(file_left)
         expect(@options.col_sep).to eq(";")
       end
+    end
+
+    it 'initializes ignore_case to false by default' do
+      expect(@options.ignore_case).to be false
+    end
+
+    it 'initializes output_file to nil by default' do
+      expect(@options.output_file).to be_nil
+    end
+
+    it 'initializes output_sep to nil by default' do
+      expect(@options.output_sep).to be_nil
+    end
+
+    it 'returns output_csv_options with output_sep when set' do
+      @options.output_sep = ";"
+      h = @options.output_csv_options
+      expect(h).to eq({ headers: true, row_sep: "\n", col_sep: ";" })
+    end
+
+    it 'returns output_csv_options falling back to col_sep when output_sep is nil' do
+      @options.col_sep = "\t"
+      h = @options.output_csv_options
+      expect(h).to eq({ headers: true, row_sep: "\n", col_sep: "\t" })
+    end
+
+    it 'creates independent copy via dup' do
+      @options.col_sep = ";"
+      @options.ignore_case = true
+      copy = @options.dup
+      copy.col_sep = "\t"
+      expect(@options.col_sep).to eq(";")
+      expect(copy.col_sep).to eq("\t")
+      expect(copy.ignore_case).to be true
     end
   end
 end

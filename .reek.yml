@@ -1,0 +1,63 @@
+---
+detectors:
+  # Options is a configuration data class — writable attributes are its purpose
+  Attribute:
+    exclude:
+      - CSVJoin::Options
+      - CSVJoin::DataRow#ignore_case
+
+  # Keyword args in initialize are correctly initialized via attr_accessor
+  InstanceVariableAssumption:
+    enabled: false
+
+  # Boolean keyword parameter is idiomatic Ruby for config
+  BooleanParameter:
+    exclude:
+      - CSVJoin::Options#initialize
+
+  # OptionParser callbacks are inherently nested
+  NestedIterators:
+    exclude:
+      - CSVJoin::Comparator#generate_csv
+
+  # Rescue variable naming: rubocop enforces 'e', reek wants longer names
+  UncommunicativeVariableName:
+    accept:
+      - e
+
+  # Config class with many options needs many parameters
+  LongParameterList:
+    exclude:
+      - CSVJoin::Options#initialize
+
+  # Helper methods placed in the correct class conceptually
+  UtilityFunction:
+    exclude:
+      - CSVJoin::Options#suggest_sep
+      - CSVJoin::Table#file?
+      - CSVJoin::Table#looks_like_filepath?
+      - CSVJoin::App
+
+  # NilCheck is appropriate for these patterns
+  NilCheck:
+    exclude:
+      - CSVJoin::App#run
+      - Diff::LCS::Change#joined_row
+
+  # FeatureEnvy for OptionParser and validation helpers
+  FeatureEnvy:
+    exclude:
+      - Diff::LCS::NoReplaceDiffCallbacks#change
+      - CSVJoin::Comparator#validate_column_exists
+      - CSVJoin::App#parse_options
+
+  # OptionParser help text and option blocks have inherent duplication
+  DuplicateMethodCall:
+    exclude:
+      - CSVJoin::App#add_banner_text
+      - CSVJoin::App#add_file_options
+      - CSVJoin::App#run
+
+  # These methods are already reasonably sized
+  TooManyStatements:
+    max_statements: 10

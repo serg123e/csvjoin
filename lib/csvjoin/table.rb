@@ -8,7 +8,7 @@ module CSVJoin
     attr_reader :rows, :options, :data
 
     def initialize(source, opts)
-      self.options = opts
+      self.options = opts.dup
       self.data = parse(source)
       self.columns = []
       self.weights = []
@@ -27,21 +27,43 @@ module CSVJoin
 
       data.each do |csv_row|
         data_row = DataRow.new(csv_row.headers, csv_row.fields)
-        data_row.define_important_columns columns
+        data_row.define_important_columns columns, weights
+        data_row.ignore_case = options.ignore_case
 
         @rows << data_row
       end
     end
 
+    def file?(data)
+      !data.include?("\n") && File.exist?(data)
+    end
+
     def parse(data)
-      if File.exist? data
-        options.suggest_sep_file(data)
-        csv = CSV.read(data, **options.hash)
-        raise "Wrong CSV" if csv == []
+      if file?(data)
+        parse_file(data)
       else
-        csv = CSV.parse(data, **options.hash)
+        parse_string(data)
       end
+    rescue CSV::MalformedCSVError => e
+      raise "Invalid CSV: #{e.message}"
+    end
+
+    def parse_file(path)
+      options.suggest_sep_file(path)
+      csv = CSV.read(path, **options.csv_options)
+      raise "Empty CSV file: #{path}" if csv == []
+
       csv
+    end
+
+    def parse_string(data)
+      raise "File not found: #{data}" if looks_like_filepath?(data)
+
+      CSV.parse(data, **options.csv_options)
+    end
+
+    def looks_like_filepath?(data)
+      !data.include?("\n") && (data.end_with?('.csv', '.tsv', '.txt') || data.include?(File::SEPARATOR))
     end
 
     private

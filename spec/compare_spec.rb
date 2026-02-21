@@ -203,6 +203,28 @@ module CSVJoin
       expect(@comparator.left.weights).to eq([0])
     end
 
+    it 'weak (~) columns do not affect row matching' do
+      left = "client,amount\nAlice,100\nBob,200"
+      right = "name,sum\nAlice,999\nBob,888"
+      @comparator.columns_to_compare = 'client=name,amount~sum'
+      result = @comparator.compare(left, right)
+      # Rows match on client=name (strict), amount~sum values differ but rows still pair
+      expect(result).to eq(
+        "client,amount,diff,name,sum\n" \
+        "Alice,100,===,Alice,999\n" \
+        "Bob,200,===,Bob,888\n"
+      )
+    end
+
+    it 'strict (=) columns still control matching when mixed with weak (~)' do
+      left = "client,amount\nAlice,100\nBob,200"
+      right = "name,sum\nCharlie,100\nDave,200"
+      @comparator.columns_to_compare = 'client=name,amount~sum'
+      result = @comparator.compare(left, right)
+      # No match on strict column (client vs name), so all rows unmatched
+      expect(result).not_to include("===")
+    end
+
     it 'handles tables with many columns' do
       headers = (1..10).map { |i| "col#{i}" }.join(",")
       row = (1..10).map(&:to_s).join(",")
@@ -219,6 +241,120 @@ module CSVJoin
       expect(result).to include("===")
       expect(result.scan("==>").size).to eq(1)
       expect(result.scan("<==").size).to eq(1)
+    end
+
+    # --- New tests for validation ---
+
+    context 'column validation' do
+      it 'raises error when left column does not exist' do
+        left = "id,name\n1,Alice"
+        right = "id,name\n1,Alice"
+        @comparator.columns_to_compare = 'nonexistent=name'
+        expect { @comparator.compare(left, right) }.to raise_error(
+          RuntimeError, /Column 'nonexistent' not found in left/
+        )
+      end
+
+      it 'raises error when right column does not exist' do
+        left = "id,name\n1,Alice"
+        right = "id,name\n1,Alice"
+        @comparator.columns_to_compare = 'name=nonexistent'
+        expect { @comparator.compare(left, right) }.to raise_error(
+          RuntimeError, /Column 'nonexistent' not found in right/
+        )
+      end
+
+      it 'raises error for malformed column specification' do
+        left = "a,b\n1,2"
+        right = "a,b\n1,2"
+        @comparator.columns_to_compare = 'a=b=c'
+        expect { @comparator.compare(left, right) }.to raise_error(RuntimeError, /Invalid column specification/)
+      end
+
+      it 'raises error when no common columns exist in auto mode' do
+        left = "x\n1"
+        right = "y\n2"
+        expect { @comparator.compare(left, right) }.to raise_error(RuntimeError, /No common columns/)
+      end
+    end
+
+    # --- Case-insensitive comparison ---
+
+    context 'case-insensitive comparison' do
+      it 'matches rows with different case when ignore_case is true' do
+        opts = Options.new(ignore_case: true)
+        comparator = Comparator.new(opts)
+        left = "name\nAlice\nBob"
+        right = "name\nalice\nbob"
+        result = comparator.compare(left, right)
+        expect(result.scan("===").size).to eq(2)
+      end
+
+      it 'does not match rows with different case when ignore_case is false' do
+        left = "name\nAlice"
+        right = "name\nalice"
+        result = @comparator.compare(left, right)
+        expect(result).not_to include("===")
+      end
+    end
+
+    # --- Different separators per file ---
+
+    context 'different separators per file' do
+      it 'handles files with different separators' do
+        tmpfiles("A;B\n1;2", "A\tB\n1\t2") do |file_left, file_right|
+          result = @comparator.compare(file_left, file_right)
+          expect(result.scan("===").size).to eq(1)
+        end
+      end
+
+      it 'uses left file separator for output by default' do
+        tmpfiles("A;B\n1;2", "A;B\n1;2") do |file_left, file_right|
+          result = @comparator.compare(file_left, file_right)
+          expect(result).to include(";")
+        end
+      end
+
+      it 'uses explicit output separator when set' do
+        opts = Options.new(output_sep: "\t")
+        comparator = Comparator.new(opts)
+        left = "a,b\n1,2"
+        right = "a,b\n1,2"
+        result = comparator.compare(left, right)
+        expect(result).to include("\t")
+        expect(result).to start_with("a\tb\tdiff\ta\tb\n")
+      end
+    end
+
+    # --- Error handling ---
+
+    context 'error handling' do
+      it 'raises error for nonexistent file path' do
+        expect { @comparator.compare("/tmp/nonexistent_file.csv", "a\n1") }.to raise_error(
+          RuntimeError, /File not found/
+        )
+      end
+
+      it 'does not treat CSV string as file even if it looks like a path' do
+        # CSV string without newline that doesn't look like a file path
+        left = "a\n1"
+        right = "a\n1"
+        result = @comparator.compare(left, right)
+        expect(result).to include("===")
+      end
+    end
+
+    # --- col_sep_right support ---
+
+    context 'per-file separator override' do
+      it 'uses col_sep_right for the right file' do
+        tmpfiles("A,B\n1,2", "A\tB\n1\t2") do |file_csv, file_tsv|
+          opts = Options.new(col_sep_right: "\t")
+          comparator = Comparator.new(opts)
+          result = comparator.compare(file_csv, file_tsv)
+          expect(result.scan("===").size).to eq(1)
+        end
+      end
     end
   end
 end

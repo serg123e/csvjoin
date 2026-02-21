@@ -22,13 +22,21 @@ module CSVJoin
       self.options = options
     end
 
-    def prepare_table(source)
-      Table.new(source, options)
+    def prepare_table(source, col_sep_override: nil)
+      opts = options
+      if col_sep_override
+        opts = options.dup
+        opts.col_sep = col_sep_override
+      end
+      Table.new(source, opts)
     end
 
     def prepare(source_left, source_right)
       self.left = prepare_table(source_left)
-      self.right = prepare_table(source_right)
+      self.right = prepare_table(source_right, col_sep_override: options.col_sep_right)
+
+      # Default output separator to left table's separator (unless user specified one)
+      options.output_sep ||= left.options.col_sep
 
       set_default_column_names
 
@@ -39,21 +47,14 @@ module CSVJoin
     # by default use columns with same names in both tables
     def set_default_column_names
       if columns_to_compare.empty?
-
-        columns = (left.headers & right.headers)
-        left.define_important_columns(columns)
-        right.define_important_columns(columns)
+        use_common_columns
       else
-        columns_to_compare.scan(/([^,:=~]+)([=~])([^,:=~]+)/).each do |from, operator, to|
-          weight = operator.eql?('=') ? 1 : 0
-          left.add_column from, weight
-          right.add_column to, weight
-        end
+        parse_column_spec
       end
     end
 
     def generate_csv(diffs)
-      CSV.generate(**options.hash) do |csv|
+      CSV.generate(**options.output_csv_options) do |csv|
         csv << [*left.headers, "diff", *right.headers]
 
         diffs.each do |change|
@@ -73,5 +74,41 @@ module CSVJoin
     private
 
     attr_writer :left, :right, :options
+
+    def use_common_columns
+      columns = (left.headers & right.headers)
+      raise "No common columns found between files" if columns.empty?
+
+      left.define_important_columns(columns)
+      right.define_important_columns(columns)
+    end
+
+    def parse_column_spec
+      validate_columns_format(columns_to_compare)
+      left_headers = left.headers
+      right_headers = right.headers
+
+      columns_to_compare.scan(/([^,:=~]+)([=~])([^,:=~]+)/).each do |from, operator, to|
+        validate_column_exists(from, left_headers, "left")
+        validate_column_exists(to, right_headers, "right")
+
+        weight = operator.eql?('=') ? 1 : 0
+        left.add_column from, weight
+        right.add_column to, weight
+      end
+    end
+
+    def validate_column_exists(column, headers, side)
+      return if headers.include?(column)
+
+      raise "Column '#{column}' not found in #{side} file. Available columns: #{headers.join(', ')}"
+    end
+
+    def validate_columns_format(spec)
+      remainder = spec.gsub(/[^,:=~]+[=~][^,:=~]+/, '').gsub(/[,:]/, '').strip
+      return if remainder.empty?
+
+      raise "Invalid column specification: '#{spec}'. Expected format: col1=col2,col3~col4"
+    end
   end
 end
