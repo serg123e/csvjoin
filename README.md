@@ -4,7 +4,17 @@ tool to align and merge two tables containing different parts of the same data, 
 ![Table join](join.png?raw=true)
 
 ## Installation
-`gem install csvjoin`
+
+From RubyGems:
+```
+gem install csvjoin
+```
+
+From GitHub (latest development version):
+```
+gem install specific_install
+gem specific_install https://github.com/serg123e/csvjoin.git
+```
 
 ## Example of use
 
